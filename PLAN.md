@@ -22,7 +22,7 @@
 | 0 | Pre-flight: Pages on, local server, scaffolding | 2 min | 0:02 | — | [x] |
 | 1 | **A Tiny World Floats.** Diorama island, citizens, intro, click-to-boop, **first deploy** | 14 min | 0:16 | 🟢 **EARLY** | [x] |
 | 2 | **Gravity Is a Suggestion.** Physics + REALITY SETTINGS (gravity, bounce) + RESTORE | 9 min | 0:25 | | [x] |
-| 3 | **BREAK REALITY: The Duck.** Big red button, FX, audio, one spectacular event | 9 min | 0:34 | 🟡 **MIDDLE** | [ ] |
+| 3 | **BREAK REALITY: The Duck.** Big red button, FX, audio, one spectacular event | 9 min | 0:34 | 🟡 **MIDDLE** | [x] |
 | 4 | **More Ways to Ruin Everything.** Gravity Resigns, Moon, Chicken Apocalypse | 8 min | 0:42 | | [ ] |
 | 5 | **Fine-Tuning Creation.** Time, Size, Wind + UNN news ticker | 7 min | 0:49 | 🟠 **LATER** | [ ] |
 | 6 | **Polish & Glory.** Achievements, mobile layout, README | 5 min | 0:54 | | [ ] |
@@ -338,14 +338,14 @@ Add the signature feature: the **giant red BREAK REALITY button**, with **one sp
 
 #### B. Implementation tasks
 **Essential**
-- [ ] 3.1 `js/fx.js`:
+- [x] 3.1 `js/fx.js`:
   - **Particle pool:** one `Points` object with 800 slots. Buffer attributes `position`, `color`, `size`. CPU arrays `vel`, `life`, `maxLife`, `gravity`.
   - Custom `ShaderMaterial`: size attenuation, a soft round sprite in the fragment shader (`smoothstep` on `gl_PointCoord`), additive blending, `depthWrite: false`.
   - `fx.emit(pos, count, {color(s), speed, spread, up, life, gravity, size})`. Dead particles are moved off-screen. When the pool is full, the oldest particles are recycled.
   - **Shockwave:** a pool of 4 flat ring meshes. `fx.shockwave(pos, color, maxScale, dur)`.
   - **Camera shake:** `fx.shake(amplitude, duration)` with decay. The offset is added after `controls.update()` and removed after render, so OrbitControls never accumulates drift.
   - **Screen flash:** `fx.flash(color, ms)`, a full-screen div.
-- [ ] 3.2 `js/audio.js`: an `AudioContext` created on the intro button click (the user gesture), with a master `GainNode` at 0.5.
+- [x] 3.2 `js/audio.js`: an `AudioContext` created on the intro button click (the user gesture), with a master `GainNode` at 0.5.
   - `quack()`: sawtooth 420→260 Hz over 0.18 s through a bandpass at 1.2 kHz, with an 18 Hz vibrato LFO, played twice.
   - `boom()`: a noise buffer through a lowpass sweep 800→60 Hz, plus a sine 110→40 Hz, 0.8 s.
   - `boing()`: sine 180→520 Hz with vibrato, 0.4 s.
@@ -354,7 +354,7 @@ Add the signature feature: the **giant red BREAK REALITY button**, with **one sp
   - A **🔊 / 🔇 mute toggle** at the top right. It works: master gain 0 ↔ 0.5. The state is remembered in `localStorage`, wrapped in try/catch.
   - Every function no-ops safely if there's no context yet.
   - RESTORE now plays `chime()` and emits teal sparkles along the ring.
-- [ ] 3.3 `js/events.js`, the runner:
+- [x] 3.3 `js/events.js`, the runner:
   ```js
   event = { id, name, headline, duration, start(ctx, ev), update(dt, ctx, ev), end(ctx, ev), cleanup(ctx, ev) }
   ```
@@ -363,19 +363,19 @@ Add the signature feature: the **giant red BREAK REALITY button**, with **one sp
   - `ctx.stats.breaks++`.
   - A `restoreHooks` entry ends and cleans up all active events immediately.
   - Event objects are **built once lazily and reused** (hidden/shown), so there are no leaks from spamming.
-- [ ] 3.4 **BREAK REALITY button**: bottom-center, a 120 px circle. Red radial gradient, a glossy highlight, a thick dark-red bottom "3D" edge shadow, a pulsing red glow (CSS keyframes), the label "BREAK REALITY" in Fredoka with a ⚠ above it. Pressing it squashes the button (`translateY(6px)`, shadow shrinks). The whole thing sits in a little hazard-striped base plate.
-- [ ] 3.5 **Event banner**: on start, a top-center banner slams in (scale 1.4 → 1 with a slight rotation): "⚠ REALITY EVENT: UNSCHEDULED DUCK", with the subtitle *"Duck classified as weather event"*. It slides away after 3.5 s.
-- [ ] 3.6 **Unscheduled Duck** (built from primitives, ~5 units tall when scaled):
+- [x] 3.4 **BREAK REALITY button**: bottom-center, a 120 px circle. Red radial gradient, a glossy highlight, a thick dark-red bottom "3D" edge shadow, a pulsing red glow (CSS keyframes), the label "BREAK REALITY" in Fredoka with a ⚠ above it. Pressing it squashes the button (`translateY(6px)`, shadow shrinks). The whole thing sits in a little hazard-striped base plate.
+- [x] 3.5 **Event banner**: on start, a top-center banner slams in (scale 1.4 → 1 with a slight rotation): "⚠ REALITY EVENT: UNSCHEDULED DUCK", with the subtitle *"Duck classified as weather event"*. It slides away after 3.5 s.
+- [x] 3.6 **Unscheduled Duck** (built from primitives, ~5 units tall when scaled):
   - Body: an ellipsoid sphere. Head: a sphere. Beak: a flattened, rotated orange cone. Eyes: black spheres with white highlight dots. Tail: a small cone. The material is glossy yellow `#ffd60a`, roughness 0.25, with a slight emissive so it pops.
   - **Anticipation (0–1.4 s):** the duck spawns at y = 45 above a random point within radius 3. A dark shadow disc grows on the grass (`CircleGeometry`, opacity 0 → 0.55, scale 0.5 → 4). Citizens near it switch to a "flee" mode, running away from the shadow at 2.5 u/s with "!" bubbles if 2.11 exists. Plays `whoosh()`.
   - **Impact:** the duck squashes (y 0.55 → spring back with `easeOutBack`). `fx.shockwave` in yellow, scale 18. `fx.emit` 200 particles (yellow, white and orange "feathers", upward cone). `fx.shake(0.6, 0.8)`, `fx.flash('#fff', 120)`, `audio.boom()` then `audio.quack()`. `sim.impulse(impactPos, 9, 14)` sends citizens, trees and houses flying.
   - **Bounce:** the duck itself bounces 2–3 times using `params.bounce`, so Flubber gives a huge duck bounce (a nice synergy with S2). Each landing makes a smaller shockwave and plays `boing()`.
   - **Idle (until 14 s):** the duck sits there, squeaks every 3 s with a mini squash and a quack, and slowly turns its head toward the camera.
   - **Exit:** it floats up while spinning like a balloon, with the toast *"The duck has left the chat."* Restore → instant pop-shrink exit.
-- [ ] 3.7 Test: trigger the duck 5×, combined with gravity changes and restore mid-event. Regression test. Commit + push + verify.
+- [x] 3.7 Test: trigger the duck 5×, combined with gravity changes and restore mid-event. Regression test. Commit + push + verify.
 
 **Optional**
-- [ ] 3.8 A clicked duck squeaks and says "I am not a metaphor."
+- [x] 3.8 A clicked duck squeaks and says "I am not a metaphor."
 - [ ] 3.9 The camera automatically eases its distance out by 15% during impact (dramatic framing), then hands control back.
 
 #### C. Visual requirements

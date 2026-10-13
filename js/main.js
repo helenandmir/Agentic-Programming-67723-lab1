@@ -11,6 +11,9 @@ import { createCitizens } from './citizens.js';
 import { createUI } from './ui.js';
 import { createInteract } from './interact.js';
 import { createSim } from './sim.js';
+import { createFX } from './fx.js';
+import { createAudio } from './audio.js';
+import { createEvents } from './events.js';
 
 const canvas = document.getElementById('scene');
 
@@ -83,7 +86,11 @@ window.__ctx = ctx; // handy for debugging in the console
 ctx.ui = createUI(ctx);
 ctx.world = createWorld(ctx);
 ctx.citizens = createCitizens(ctx);
+ctx.audio = createAudio(ctx);
+ctx.onAccept = ctx.audio.init;
+ctx.fx = createFX(ctx);
 ctx.sim = createSim(ctx);
+ctx.events = createEvents(ctx);
 ctx.interact = createInteract(ctx);
 
 document.getElementById('pop').textContent = ctx.citizens.list.length;

@@ -126,6 +126,7 @@ export function createUI(ctx) {
   });
   $('restore').addEventListener('click', () => {
     ctx.sim.restore();
+    ctx.audio?.chime();
     toast(Math.random() < 0.5 ? 'Reality restored. Nobody saw anything.' : 'Reality restored. Please act natural.', 'info');
   });
 
@@ -137,9 +138,27 @@ export function createUI(ctx) {
     if (window.innerWidth <= 700) panel.classList.add('collapsed');
   });
 
+  const bannerEl = $('banner');
+  let bannerTimer = null;
+  function banner(title, sub) {
+    bannerEl.querySelector('.b-title').textContent = title;
+    bannerEl.querySelector('.b-sub').textContent = sub || '';
+    bannerEl.classList.remove('hidden', 'show', 'leave');
+    void bannerEl.offsetWidth;
+    bannerEl.classList.add('show');
+    clearTimeout(bannerTimer);
+    bannerTimer = setTimeout(() => {
+      bannerEl.classList.add('leave');
+      bannerTimer = setTimeout(() => bannerEl.classList.add('hidden'), 400);
+    }, 3500);
+  }
+
+  (ctx.readyHooks ||= []).push(() => $('mute').classList.remove('hidden'));
+
   return {
     tooltip,
     toast,
+    banner,
     setParam,
     update(dt) {
       for (const [name, tw] of Object.entries(tweens)) {

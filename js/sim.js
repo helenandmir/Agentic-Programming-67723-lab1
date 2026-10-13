@@ -173,6 +173,13 @@ export function createSim(ctx) {
       ctx.stats.restores++;
       ringT = 0;
       ring.visible = true;
+      if (ctx.fx) {
+        for (let i = 0; i < 24; i++) {
+          const ang = (i / 24) * Math.PI * 2;
+          tmpV.set(Math.cos(ang) * 8.5, 0.3, Math.sin(ang) * 8.5);
+          ctx.fx.emit(tmpV, 4, { colors: [0x5ff5e4, 0xffffff, 0xb8fff6], speed: 1.5, up: 4, life: 1.4, gravity: 1.5, size: 0.35 });
+        }
+      }
     },
     update(dt, t, rawDt) {
       if (suppressDetach > 0) suppressDetach -= rawDt;
