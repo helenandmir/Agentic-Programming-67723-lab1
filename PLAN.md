@@ -21,7 +21,7 @@
 |---|---|---|---|---|---|
 | 0 | Pre-flight: Pages on, local server, scaffolding | 2 min | 0:02 | — | [x] |
 | 1 | **A Tiny World Floats.** Diorama island, citizens, intro, click-to-boop, **first deploy** | 14 min | 0:16 | 🟢 **EARLY** | [x] |
-| 2 | **Gravity Is a Suggestion.** Physics + REALITY SETTINGS (gravity, bounce) + RESTORE | 9 min | 0:25 | | [ ] |
+| 2 | **Gravity Is a Suggestion.** Physics + REALITY SETTINGS (gravity, bounce) + RESTORE | 9 min | 0:25 | | [x] |
 | 3 | **BREAK REALITY: The Duck.** Big red button, FX, audio, one spectacular event | 9 min | 0:34 | 🟡 **MIDDLE** | [ ] |
 | 4 | **More Ways to Ruin Everything.** Gravity Resigns, Moon, Chicken Apocalypse | 8 min | 0:42 | | [ ] |
 | 5 | **Fine-Tuning Creation.** Time, Size, Wind + UNN news ticker | 7 min | 0:49 | 🟠 **LATER** | [ ] |
@@ -254,14 +254,14 @@ The first **reality-bending vertical slice**: one beautiful, fully working physi
 
 #### B. Implementation tasks
 **Essential**
-- [ ] 2.1 `js/sim.js` creates a body for every entity in `world.entities` (citizens, houses, trees; the town hall is **anchored**, as the joke goes: "bolted down by bureaucracy"):
+- [x] 2.1 `js/sim.js` creates a body for every entity in `world.entities` (citizens, houses, trees; the town hall is **anchored**, as the joke goes: "bolted down by bureaucracy"):
   ```js
   body = { obj, kind, home: {pos, quat}, vel: V3, angVel: V3, radius,
            state: 'home'|'free'|'returning', liftThreshold, hoverCeil, ret: {t, delay, fromPos, fromQuat} }
   ```
   - `liftThreshold` depends on the category, plus `rand(0, 0.15)`: citizen 0.85, tree 0.55, house 0.3. When `params.gravity < liftThreshold`, the body detaches. Dragging the slider down makes the town lift off **gradually**: citizens first, then trees, then houses. This is the money shot.
   - `hoverCeil = rand(4, 14)`.
-- [ ] 2.2 Integration for `state === 'free'`, every frame:
+- [x] 2.2 Integration for `state === 'free'`, every frame:
   - `vel.y += -9.8·gravity·dt`.
   - Above `hoverCeil`, apply a soft restoring force `-(y - hoverCeil)·3`, so with negative gravity objects **hover and bob at different heights** instead of flying away.
   - With `gravity < 0.3`, air drag `vel *= 0.985`.
@@ -269,22 +269,22 @@ The first **reality-bending vertical slice**: one beautiful, fully working physi
   - **Ground contact** (`y < 0` and `xz radius < ISLAND_R`): set `y = 0`, `vel.y = -vel.y·bounce`, xz friction `vel.xz *= 0.85`, `angVel *= 0.7`, and trigger a squash of size ∝ impact speed. If `|vel.y| < 0.5` and `gravity ≥ 0.9`, the body settles and stays where it landed (a messy town is funny). Citizens switch to `gettingUp`: they slerp upright over 0.5 s, then wander again.
   - **Off the edge** (`xz > ISLAND_R`): no ground, so it falls into the void. Below y = −40 it respawns at `home` with a pop-in scale and the toast *"Citizen #12 has been recycled."*
   - Speed is clamped to 40. Bounce > 1 adds energy, and that's intended.
-- [ ] 2.3 With `gravity > 1.2`, citizens and houses get a static "heavy" squish (scaleY = 1 − 0.12·(g−1)) through `applyScale`.
-- [ ] 2.4 `sim.impulse(center, radius, strength)`: detaches bodies in range and adds `dir·strength·falloff + up·strength·1.2·falloff`. It's **built now** for S3 and also used by RESTORE testing.
-- [ ] 2.5 `sim.restore()`:
+- [x] 2.3 With `gravity > 1.2`, citizens and houses get a static "heavy" squish (scaleY = 1 − 0.12·(g−1)) through `applyScale`.
+- [x] 2.4 `sim.impulse(center, radius, strength)`: detaches bodies in range and adds `dir·strength·falloff + up·strength·1.2·falloff`. It's **built now** for S3 and also used by RESTORE testing.
+- [x] 2.5 `sim.restore()`:
   - Every non-home body becomes `returning`, with delay = `distance(home, 0)/ISLAND_R · 0.4 s`, so restore sweeps outward like a wave.
   - Over 1.0 s: position `lerp` with `easeOutBack`, quaternion `slerp` to `home.quat`.
   - Gravity animates back to 1 and bounce back to 0.4. **The sliders visibly glide back.**
   - Calls every function in `ctx.restoreHooks`.
   - `ctx.stats.restores++`.
-- [ ] 2.6 Restore visual: an expanding teal ring (`RingGeometry(0.92, 1, 96)`, flat, `MeshBasicMaterial` with additive blending, transparent). Scale goes 0.5 → 16 and opacity 1 → 0 over 1.2 s, starting at the island center. A toast: *"Reality restored. Nobody saw anything."*
-- [ ] 2.7 `ui.js` **REALITY SETTINGS™ panel**: a glass card on the right (300 px), with header "REALITY SETTINGS™" and the tiny subtitle *"Warranty void if adjusted"*. It's collapsible with a chevron.
+- [x] 2.6 Restore visual: an expanding teal ring (`RingGeometry(0.92, 1, 96)`, flat, `MeshBasicMaterial` with additive blending, transparent). Scale goes 0.5 → 16 and opacity 1 → 0 over 1.2 s, starting at the island center. A toast: *"Reality restored. Nobody saw anything."*
+- [x] 2.7 `ui.js` **REALITY SETTINGS™ panel**: a glass card on the right (300 px), with header "REALITY SETTINGS™" and the tiny subtitle *"Warranty void if adjusted"*. It's collapsible with a chevron.
   - **Gravity** slider: −1 … 3, step 0.05. Its live label names the zone: −1 "Upside-down", 0 "Space Mode", 1 "Earth (boring)", 2 "Heavy Day", 3 "Jupiter-ish".
   - **Bounciness** slider: 0 … 1.3. Zones: "Clay", "Normal", "Rubber", "Flubber (illegal)".
   - Custom-styled range inputs with a teal track fill and a big round thumb.
   - **RESTORE REALITY** button: wide, teal gradient, sparkle emoji ✨, glows on hover.
   - `ui.setParam(name, value, {animate})` sets the param **and** moves the slider. Events and restore use it too.
-- [ ] 2.8 Commentary: when the gravity slider settles (600 ms debounce) **in a new zone**, toast a random line from that zone's bank (≥3 lines each). For example:
+- [x] 2.8 Commentary: when the gravity slider settles (600 ms debounce) **in a new zone**, toast a random line from that zone's bank (≥3 lines each). For example:
   - g < −0.3: "Gravity is now optional. Citizens have filed a complaint."
   - ≈0: "Welcome to space. Please hold onto your houses."
   - 0.3–0.9: "Citizens report feeling 'floaty'. Productivity down 80%."
@@ -293,10 +293,10 @@ The first **reality-bending vertical slice**: one beautiful, fully working physi
   - > 2: "Jupiter mode. Spines are being compressed."
 
   Bounciness > 1 gets: "Flubber levels exceed legal limits."
-- [ ] 2.9 Test with the full regression (S1 demo + new features), then commit + push + verify the URL.
+- [x] 2.9 Test with the full regression (S1 demo + new features), then commit + push + verify the URL.
 
 **Optional**
-- [ ] 2.10 HUD **Reality Stability** meter. A real value: `100 − 15·|g−1| − 5·(free bodies / total)·10`, clamped, with color shifting green → amber → red. It goes to 100% on restore.
+- [x] 2.10 HUD **Reality Stability** meter. A real value: `100 − 15·|g−1| − 5·(free bodies / total)·10`, clamped, with color shifting green → amber → red. It goes to 100% on restore.
 - [ ] 2.11 Floating citizens show "!" speech-bubble sprites while free.
 
 #### C. Visual requirements

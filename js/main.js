@@ -10,6 +10,7 @@ import { createWorld } from './world.js';
 import { createCitizens } from './citizens.js';
 import { createUI } from './ui.js';
 import { createInteract } from './interact.js';
+import { createSim } from './sim.js';
 
 const canvas = document.getElementById('scene');
 
@@ -73,6 +74,7 @@ const ctx = {
   THREE, scene, camera, controls, renderer, composer, bloom, rng,
   params: { gravity: 1, bounce: 0.4, timeScale: 1, wind: 0, scale: { citizen: 1, tree: 1, house: 1 } },
   restoreHooks: [],
+  readyHooks: [],
   stats: { breaks: 0, restores: 0, activeEvents: 0 },
   ready: false,
 };
@@ -81,6 +83,7 @@ window.__ctx = ctx; // handy for debugging in the console
 ctx.ui = createUI(ctx);
 ctx.world = createWorld(ctx);
 ctx.citizens = createCitizens(ctx);
+ctx.sim = createSim(ctx);
 ctx.interact = createInteract(ctx);
 
 document.getElementById('pop').textContent = ctx.citizens.list.length;
@@ -93,6 +96,7 @@ document.getElementById('accept').addEventListener('click', () => {
   setTimeout(() => document.getElementById('intro').classList.add('hidden'), 700);
   const from = new THREE.Spherical().setFromVector3(camera.position.clone().sub(TARGET));
   const to = HOME_SPH.clone();
+  if (camera.aspect < 1) to.radius *= Math.min(1.9, 1.15 / camera.aspect); // portrait phones: back up to fit the island
   // Swing around the island toward the home angle along the shortest arc.
   const d = to.theta - from.theta;
   to.theta = from.theta + Math.atan2(Math.sin(d), Math.cos(d));
@@ -105,7 +109,7 @@ function finishIntro() {
   controls.enabled = true;
   ctx.ready = true;
   document.getElementById('hud').classList.remove('hidden');
-  ctx.onReady?.();
+  for (const f of ctx.readyHooks || []) f();
   ctx.ui.toast('Welcome, God. Please do not touch anything important.', 'info', 5);
   idleTimer = setTimeout(() => { controls.autoRotate = true; }, 8000);
 }
@@ -132,7 +136,7 @@ function frame() {
   const t = worldTime;
 
   ctx.citizens.update(dt, t);
-  ctx.sim?.update(dt, t);
+  ctx.sim?.update(dt, t, rawDt);
   ctx.events?.update(dt, t);
   ctx.world.update(dt, t, rawDt);
   ctx.fx?.update(rawDt);
