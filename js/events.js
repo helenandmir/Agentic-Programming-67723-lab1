@@ -1,6 +1,6 @@
 // BREAK REALITY: the event runner and the events themselves.
 import * as THREE from 'three';
-import { rand, pick } from './util.js';
+import { rand, pick, easeInOutCubic } from './util.js';
 
 // ---------------------------------------------------------------------------
 // Event: Unscheduled Duck
@@ -188,11 +188,132 @@ function resignedEvent(ctx) {
 }
 
 // ---------------------------------------------------------------------------
+// Event: The Moon Is Too Close
+// ---------------------------------------------------------------------------
+function moonEvent(ctx) {
+  const { world, fx, audio, sim, ui, scene } = ctx;
+  let moon, smile, oops;
+  const from = new THREE.Vector3(), to = new THREE.Vector3(), boop = new THREE.Vector3(), dir = new THREE.Vector3();
+  const day = {}, night = {
+    top: new THREE.Color(0x05030f), mid: new THREE.Color(0x14104a), horizon: new THREE.Color(0x3a2f7a), sun: 0.45, hemi: 0.35,
+  };
+
+  function build() {
+    if (moon) return;
+    moon = new THREE.Group();
+    const rock = new THREE.MeshStandardMaterial({ color: 0xcfd2e0, roughness: 0.9, emissive: 0x9aa6ff, emissiveIntensity: 0.18, flatShading: true });
+    const crater = new THREE.MeshStandardMaterial({ color: 0x9a9db0, roughness: 1, flatShading: true });
+    moon.add(new THREE.Mesh(new THREE.IcosahedronGeometry(6, 3), rock));
+    for (let i = 0; i < 14; i++) {
+      const c = new THREE.Mesh(new THREE.SphereGeometry(rand(0.5, 1.3), 10, 8), crater);
+      const v = new THREE.Vector3(rand(-1, 1), rand(-1, 1), rand(-1, 0.2)).normalize();
+      if (v.z > -0.2 && Math.abs(v.x) < 0.6 && Math.abs(v.y) < 0.6) v.z = -0.8; // keep the face clear
+      c.position.copy(v.normalize().multiplyScalar(5.8));
+      c.scale.z = 0.4;
+      c.lookAt(0, 0, 0);
+      moon.add(c);
+    }
+    const black = new THREE.MeshBasicMaterial({ color: 0x1a1030 });
+    for (const sx of [-1, 1]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 12), black);
+      eye.position.set(sx * 1.8, 1.2, 5.7);
+      eye.scale.z = 0.5;
+      moon.add(eye);
+    }
+    smile = new THREE.Mesh(new THREE.TorusGeometry(1.4, 0.22, 8, 24, Math.PI), black);
+    smile.position.set(0, -0.6, 5.8);
+    smile.rotation.z = Math.PI; // a smile
+    oops = new THREE.Mesh(new THREE.TorusGeometry(0.55, 0.2, 8, 20), black);
+    oops.position.set(0, -1.1, 5.8);
+    oops.visible = false;
+    moon.add(smile, oops);
+    moon.userData = { kind: 'moon', name: 'The Moon', quips: ['I just wanted to see the town up close.', 'Sorry about the tides.', 'Squeak?'], baseScale: 1, height: 7 };
+    moon.visible = false;
+    scene.add(moon);
+    world.entities.push(moon);
+    const u = world.skyUniforms;
+    Object.assign(day, { top: u.top.value.clone(), mid: u.mid.value.clone(), horizon: u.horizon.value.clone(), sun: world.sun.intensity, hemi: world.hemi.intensity, fog: scene.fog.color.clone() });
+  }
+
+  function mood(k) {
+    const u = world.skyUniforms;
+    u.top.value.copy(day.top).lerp(night.top, k);
+    u.mid.value.copy(day.mid).lerp(night.mid, k);
+    u.horizon.value.copy(day.horizon).lerp(night.horizon, k);
+    scene.fog.color.copy(day.fog).lerp(night.horizon, k);
+    world.sun.intensity = day.sun + (night.sun - day.sun) * k;
+    world.hemi.intensity = day.hemi + (night.hemi - day.hemi) * k;
+  }
+
+  return {
+    id: 'moon',
+    name: 'THE MOON IS TOO CLOSE',
+    subtitle: 'Please do not feed the Moon',
+    start(ev) {
+      build();
+      // Approach from behind the island, as seen from the current camera.
+      dir.set(ctx.camera.position.x, 0, ctx.camera.position.z).normalize().negate();
+      from.copy(dir).multiplyScalar(130).setY(32);
+      to.copy(dir).multiplyScalar(21).setY(11);
+      boop.copy(dir).multiplyScalar(13.5).setY(8);
+      moon.position.copy(from);
+      moon.lookAt(ctx.camera.position);
+      moon.visible = true;
+      smile.visible = true;
+      oops.visible = false;
+      ev.booped = false;
+      audio.rumble(4.2);
+    },
+    update(ev, dt) {
+      const t = ev.t;
+      if (t < 4) {
+        const p = easeInOutCubic(t / 4);
+        moon.position.lerpVectors(from, to, p);
+        mood(p);
+        fx.shake(0.22 * p, 0.25);
+      } else if (t < 5) {
+        if (!ev.booped) {
+          ev.booped = true;
+          sim.impulse(new THREE.Vector3(), 30, 6);
+          ctx.lowG = 3.5;
+          fx.shockwave(new THREE.Vector3(), 0xbfd0ff, 20, 1.2);
+          fx.flash('#cfd8ff', 140);
+          fx.shake(0.6, 0.8);
+          audio.boom();
+          ui.toast('The Moon has booped the island. Everything is now floating in moonlight.', 'danger');
+        }
+        const k = Math.sin(((t - 4) / 1) * Math.PI);
+        moon.position.lerpVectors(to, boop, k);
+      } else {
+        if (!oops.visible) {
+          smile.visible = false;
+          oops.visible = true;
+          ui.tooltip(moon, 'The Moon', 'sorry 😳', 3);
+        }
+        const p = easeInOutCubic(Math.min(1, (t - 5.5) / 4.5));
+        if (t > 5.5) {
+          moon.position.lerpVectors(to, from, p);
+          mood(1 - p);
+        }
+        if (t >= 10) return true;
+      }
+      moon.lookAt(ctx.camera.position);
+      moon.rotation.z += Math.sin(t * 2) * 0.05;
+      return false;
+    },
+    cleanup() {
+      moon.visible = false;
+      mood(0);
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 export function createEvents(ctx) {
   const { ui, audio } = ctx;
-  const EVENTS = [duckEvent(ctx), resignedEvent(ctx)];
+  const EVENTS = [duckEvent(ctx), resignedEvent(ctx), moonEvent(ctx)];
   const active = [];
   let lastId = null;
   const btn = document.getElementById('break');

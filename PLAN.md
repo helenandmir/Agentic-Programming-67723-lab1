@@ -423,7 +423,7 @@ Variety. With 3 more distinct events, BREAK REALITY becomes a surprise box, so r
     It has a working **[Accept Resignation]** button that closes the letter early.
   - Plays `whoosh()`.
   - End: gravity animates back to the remembered value. Toast: *"Gravity has been rehired. At minimum wage."*
-- [ ] 4.2 **The Moon Is Too Close** (≈3.5 min, 10 s event):
+- [x] 4.2 **The Moon Is Too Close** (≈3.5 min, 10 s event):
   - The moon is a `SphereGeometry(6, 32, 24)` in grey `#cfd2e0` with ~12 darker crater spheres partially embedded, and a cute face (2 black eye spheres + a small partial-torus smile). An emissive 0.15 makes it glow faintly, so bloom kisses its edge.
   - 0–4 s: it approaches from `(0, 30, −120)` to `(0, 12, −20)` (`easeInOutCubic`). The sky uniforms lerp to a night palette, sun intensity drops 2.4 → 0.7, and the hemisphere light turns blue. Shake ramps 0 → 0.2, with a rumble (low noise) that grows.
   - 4 s, the **BOOP**: the moon lunges to `(0, 9, −13)` and back. `sim.impulse(origin, 30, 6)` launches everything upward, and `ctx.sim.lowG = 3` multiplies g by 0.15 for 3 s, so everything floats in moonlight. Particles, shockwave, boom.
