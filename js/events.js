@@ -155,11 +155,44 @@ function duckEvent(ctx) {
 }
 
 // ---------------------------------------------------------------------------
+// Event: Gravity Has Resigned
+// ---------------------------------------------------------------------------
+function resignedEvent(ctx) {
+  const { ui, audio } = ctx;
+  const letter = document.getElementById('letter');
+  document.getElementById('accept-resignation').addEventListener('click', () => {
+    letter.classList.add('hidden');
+    ui.toast('Resignation accepted. HR is thrilled.', 'info');
+  });
+  return {
+    id: 'resigned',
+    name: 'GRAVITY HAS RESIGNED',
+    subtitle: 'Citing "a toxic work environment"',
+    start(ev) {
+      ev.prev = ctx.params.gravity >= 0.3 ? ctx.params.gravity : 1;
+      ui.setParam('gravity', -0.6, { animate: true });
+      letter.classList.remove('hidden');
+      audio.whoosh();
+    },
+    update(ev) {
+      return ev.t > 7.5;
+    },
+    cleanup(ev, instant) {
+      letter.classList.add('hidden');
+      if (!instant) {
+        ui.setParam('gravity', ev.prev, { animate: true });
+        ui.toast('Gravity has been rehired. At minimum wage.', 'warn');
+      }
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 export function createEvents(ctx) {
   const { ui, audio } = ctx;
-  const EVENTS = [duckEvent(ctx)];
+  const EVENTS = [duckEvent(ctx), resignedEvent(ctx)];
   const active = [];
   let lastId = null;
   const btn = document.getElementById('break');

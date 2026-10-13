@@ -343,7 +343,41 @@ input[type="range"].wild { --accent: #f15bb5; }
 @keyframes breakPulse { 50% { box-shadow: 0 9px 0 #5e060c, 0 0 0 3px #3a0408, 0 0 70px rgba(255, 59, 59, 0.85); } }
 @keyframes wobble { 20% { transform: rotate(-12deg); } 40% { transform: rotate(10deg); } 60% { transform: rotate(-6deg); } 80% { transform: rotate(3deg); } }
 
+/* ---------- Resignation letter ---------- */
+#letter {
+  position: fixed;
+  left: max(16px, 8vw);
+  top: 50%;
+  z-index: 36;
+  width: min(330px, calc(100vw - 32px));
+  padding: 22px 24px 18px;
+  color: #3b2a1a;
+  font-family: "Courier New", Courier, monospace;
+  font-size: 15px;
+  line-height: 1.4;
+  background: linear-gradient(180deg, #fffaf0, #f3e3c3);
+  border-radius: 6px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45), inset 0 0 40px rgba(160, 110, 40, 0.18);
+  transform: translateY(-50%) rotate(-2deg);
+  animation: letterIn 0.6s cubic-bezier(.2, 1.4, .4, 1) both;
+}
+#letter p { margin: 0 0 10px; }
+#letter .l-sign { text-align: right; font-style: italic; font-weight: 700; }
+#letter button {
+  font-family: var(--font-display);
+  font-weight: 600;
+  border: 2px solid #3b2a1a;
+  background: transparent;
+  color: #3b2a1a;
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+#letter button:hover { background: #3b2a1a; color: #fffaf0; }
+@keyframes letterIn { from { opacity: 0; transform: translateY(-30%) rotate(-12deg) scale(0.7); } to { opacity: 1; transform: translateY(-50%) rotate(-2deg); } }
+
 @media (max-width: 700px) {
+  #letter { top: auto; bottom: 110px; transform: rotate(-2deg); font-size: 13px; }
   #mute { top: 12px; right: 12px; }
   #break-wrap { left: auto; right: 12px; top: 62px; bottom: auto; transform: none; padding: 7px; }
   #break { width: 86px; height: 86px; font-size: 12px; }

@@ -415,7 +415,7 @@ Variety. With 3 more distinct events, BREAK REALITY becomes a surprise box, so r
 
 #### B. Implementation tasks (each event = add an entry to `EVENTS`; then test + commit)
 **Essential**
-- [ ] 4.1 **Gravity Has Resigned** (≈2 min, 7 s event):
+- [x] 4.1 **Gravity Has Resigned** (≈2 min, 7 s event):
   - Start: remember the current gravity, then `ui.setParam('gravity', -0.6, {animate: true})`. **The slider visibly slides by itself** and the town lifts off through the S2 sim.
   - A **resignation letter** card (cream parchment, rotated −2°, serif/typewriter font, drop shadow) pops up in the center-left:
     > *"To whom it may concern: I have been holding everything down for 13.8 billion years without a single thank-you. Effective immediately, I quit. — Gravity"*
