@@ -2,44 +2,49 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lab 1</title>
-  <style>
-    body {
-      font-family: system-ui, sans-serif;
-      max-width: 640px;
-      margin: 40px auto;
-      padding: 0 16px;
-      line-height: 1.6;
-      color: #222;
-      background: #fafafa;
-    }
-    h1 { color: #2b5797; }
-    button {
-      padding: 8px 16px;
-      font-size: 1rem;
-      border: none;
-      border-radius: 6px;
-      background: #2b5797;
-      color: white;
-      cursor: pointer;
-    }
-    button:hover { background: #1e3f6e; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>The Universe Has a Bug</title>
+  <meta name="description" content="You have been promoted to God. There was an administrative error. A tiny floating 3D universe you can break.">
+  <meta name="theme-color" content="#1a1446">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌍</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./css/style.css">
+  <script type="importmap">
+  { "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  } }
+  </script>
 </head>
 <body>
-  <h1>Agentic Programming 67723 – Lab 1</h1>
-  <p>Welcome! This is a simple web page.</p>
+  <canvas id="scene"></canvas>
 
-  <button id="btn">Click me</button>
-  <p id="count">You clicked 0 times.</p>
+  <div id="hud" class="glass hidden">
+    <div class="hud-title">Universe <span>v0.0.1-beta</span></div>
+    <div class="hud-line">Population: <b id="pop">0</b> (unaware)</div>
+  </div>
 
-  <script>
-    let clicks = 0;
-    document.getElementById("btn").addEventListener("click", () => {
-      clicks++;
-      document.getElementById("count").textContent = `You clicked ${clicks} times.`;
-    });
-  </script>
+  <div id="toasts"></div>
+  <div id="tooltip" class="hidden"></div>
+
+  <div id="intro">
+    <div class="intro-card glass">
+      <h1 class="glitch" data-text="THE UNIVERSE HAS A BUG">THE UNIVERSE HAS A BUG</h1>
+      <p>You have been promoted to <b>God</b>.</p>
+      <p class="muted">There was an administrative error.</p>
+      <button id="accept" class="btn-primary">ACCEPT QUESTIONABLE RESPONSIBILITY</button>
+    </div>
+  </div>
+
+  <div id="fatal" class="hidden">
+    <div class="intro-card glass">
+      <h1>The universe failed to load</h1>
+      <p class="muted">Your browser declined to render reality (WebGL unavailable). Try a different browser.</p>
+    </div>
+  </div>
+
+  <script type="module" src="./js/main.js"></script>
 </body>
 </html>
