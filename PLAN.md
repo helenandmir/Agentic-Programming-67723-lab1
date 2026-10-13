@@ -23,7 +23,7 @@
 | 1 | **A Tiny World Floats.** Diorama island, citizens, intro, click-to-boop, **first deploy** | 14 min | 0:16 | 🟢 **EARLY** | [x] |
 | 2 | **Gravity Is a Suggestion.** Physics + REALITY SETTINGS (gravity, bounce) + RESTORE | 9 min | 0:25 | | [x] |
 | 3 | **BREAK REALITY: The Duck.** Big red button, FX, audio, one spectacular event | 9 min | 0:34 | 🟡 **MIDDLE** | [x] |
-| 4 | **More Ways to Ruin Everything.** Gravity Resigns, Moon, Chicken Apocalypse | 8 min | 0:42 | | [ ] |
+| 4 | **More Ways to Ruin Everything.** Gravity Resigns, Moon, Chicken Apocalypse | 8 min | 0:42 | | [x] |
 | 5 | **Fine-Tuning Creation.** Time, Size, Wind + UNN news ticker | 7 min | 0:49 | 🟠 **LATER** | [ ] |
 | 6 | **Polish & Glory.** Achievements, mobile layout, README | 5 min | 0:54 | | [ ] |
 | 7 | **Ship It.** Final deploy verification + demo rehearsal (**non-negotiable**) | 6 min | 1:00 | 🔵 **FINAL** | [ ] |
@@ -428,7 +428,7 @@ Variety. With 3 more distinct events, BREAK REALITY becomes a surprise box, so r
   - 0–4 s: it approaches from `(0, 30, −120)` to `(0, 12, −20)` (`easeInOutCubic`). The sky uniforms lerp to a night palette, sun intensity drops 2.4 → 0.7, and the hemisphere light turns blue. Shake ramps 0 → 0.2, with a rumble (low noise) that grows.
   - 4 s, the **BOOP**: the moon lunges to `(0, 9, −13)` and back. `sim.impulse(origin, 30, 6)` launches everything upward, and `ctx.sim.lowG = 3` multiplies g by 0.15 for 3 s, so everything floats in moonlight. Particles, shockwave, boom.
   - 5–10 s: its face switches to "oops" (eyes squint, the mouth flips to an O) and a tooltip-bubble on it says "sorry". It retreats sheepishly, and the sky and lighting lerp back.
-- [ ] 4.3 **Chicken Apocalypse** (≈2.5 min, 18 s event):
+- [x] 4.3 **Chicken Apocalypse** (≈2.5 min, 18 s event):
   - Build one chicken from primitives: a white body sphere, head, red comb, orange beak and black eyes, colored with **vertex colors**. Merge them with `mergeGeometries` into one geometry and use **one `InstancedMesh(60)`**.
   - Spawn 60 chickens over 3 s at y 25–40, at random xz within the island radius.
   - A lightweight array-based integrator (same rules as sim: gravity param, bounce param, island ground, off-edge fall) updates the instance matrices. After landing, each chicken hops randomly (`vel.y = 2–4` every 0.5–1.5 s) and turns.

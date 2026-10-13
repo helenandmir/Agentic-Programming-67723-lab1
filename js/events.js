@@ -1,6 +1,7 @@
 // BREAK REALITY: the event runner and the events themselves.
 import * as THREE from 'three';
-import { rand, pick, easeInOutCubic } from './util.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { rand, easeInOutCubic } from './util.js';
 
 // ---------------------------------------------------------------------------
 // Event: Unscheduled Duck
@@ -309,11 +310,118 @@ function moonEvent(ctx) {
 }
 
 // ---------------------------------------------------------------------------
+// Event: Chicken Apocalypse (one InstancedMesh, merged vertex-colored geometry)
+// ---------------------------------------------------------------------------
+function chickenEvent(ctx) {
+  const { world, fx, audio, ui } = ctx;
+  const N = 60;
+  let mesh;
+  const P = new Float32Array(N * 3), V = new Float32Array(N * 3), yaw = new Float32Array(N), hop = new Float32Array(N);
+  const alive = new Uint8Array(N);
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), pos = new THREE.Vector3(), sc = new THREE.Vector3(), up = new THREE.Vector3(0, 1, 0);
+  let lastCluck = 0;
+
+  function part(geo, color, fn) {
+    fn?.(geo);
+    const c = new THREE.Color(color);
+    const n = geo.attributes.position.count;
+    const arr = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) arr.set([c.r, c.g, c.b], i * 3);
+    geo.setAttribute('color', new THREE.BufferAttribute(arr, 3));
+    return geo;
+  }
+  function build() {
+    if (mesh) return;
+    const geo = mergeGeometries([
+      part(new THREE.SphereGeometry(0.3, 12, 9), 0xffffff, (g) => g.scale(1, 0.9, 1.2).translate(0, 0.3, 0)),
+      part(new THREE.SphereGeometry(0.18, 10, 8), 0xffffff, (g) => g.translate(0, 0.62, 0.25)),
+      part(new THREE.BoxGeometry(0.06, 0.13, 0.17), 0xff2d2d, (g) => g.translate(0, 0.82, 0.24)),
+      part(new THREE.ConeGeometry(0.07, 0.16, 6), 0xff9f1c, (g) => g.rotateX(Math.PI / 2).translate(0, 0.6, 0.47)),
+      part(new THREE.SphereGeometry(0.035, 6, 4), 0x111111, (g) => g.translate(0.11, 0.68, 0.37)),
+      part(new THREE.SphereGeometry(0.035, 6, 4), 0x111111, (g) => g.translate(-0.11, 0.68, 0.37)),
+      part(new THREE.ConeGeometry(0.15, 0.3, 6), 0xf3f3f3, (g) => g.rotateX(-0.8).translate(0, 0.45, -0.35)),
+    ]);
+    mesh = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.6 }), N);
+    mesh.castShadow = true;
+    mesh.frustumCulled = false;
+    mesh.visible = false;
+    world.root.add(mesh);
+  }
+
+  return {
+    id: 'chickens',
+    name: 'CHICKEN APOCALYPSE',
+    subtitle: 'Forecast: 100% chance of poultry',
+    start(ev) {
+      build();
+      alive.fill(0);
+      ev.spawned = 0;
+      mesh.visible = true;
+      ui.toast('It is raining chickens. Citizens advised to wear helmets.', 'danger');
+    },
+    update(ev, dt) {
+      const t = ev.t;
+      const want = Math.min(N, Math.floor((t / 3) * N));
+      while (ev.spawned < want) {
+        const i = ev.spawned++;
+        const a = rand(0, Math.PI * 2), r = Math.sqrt(Math.random()) * 9;
+        P.set([Math.cos(a) * r, rand(20, 38), Math.sin(a) * r], i * 3);
+        V.set([0, rand(-4, 0), 0], i * 3);
+        yaw[i] = rand(0, Math.PI * 2);
+        hop[i] = rand(0.3, 1.5);
+        alive[i] = 1;
+      }
+      const g = ctx.params.gravity * (ctx.lowG > 0 ? 0.15 : 1);
+      const shrink = t > 18 ? Math.max(0, 1 - (t - 18)) : 1;
+      for (let i = 0; i < N; i++) {
+        if (!alive[i]) { m4.makeScale(0, 0, 0); mesh.setMatrixAt(i, m4); continue; }
+        const k = i * 3;
+        V[k + 1] -= 9.8 * g * dt;
+        if (g < 0.3) {
+          if (P[k + 1] > 10) V[k + 1] -= (P[k + 1] - 10) * 3 * dt;
+          V[k] *= Math.pow(0.4, dt); V[k + 1] *= Math.pow(0.4, dt); V[k + 2] *= Math.pow(0.4, dt);
+        }
+        P[k] += V[k] * dt; P[k + 1] += V[k + 1] * dt; P[k + 2] += V[k + 2] * dt;
+        const r = Math.hypot(P[k], P[k + 2]);
+        if (P[k + 1] <= 0 && P[k + 1] > -1.5 && r < 9.8) {
+          P[k + 1] = 0;
+          if (V[k + 1] < -3) {
+            const now = performance.now();
+            if (now - lastCluck > 160) { lastCluck = now; audio.cluck(); }
+            fx.emit(pos.set(P[k], 0.3, P[k + 2]), 3, { colors: [0xffffff], speed: 2, up: 1.5, life: 0.6, gravity: 4, size: 0.25 });
+          }
+          V[k + 1] = V[k + 1] < -1 ? Math.min(-V[k + 1] * ctx.params.bounce, 12) : 0;
+          V[k] *= 0.5; V[k + 2] *= 0.5;
+          hop[i] -= dt;
+          if (hop[i] <= 0) {
+            hop[i] = rand(0.5, 1.5);
+            yaw[i] += rand(-2, 2);
+            V[k + 1] = rand(2, 4);
+            V[k] = Math.sin(yaw[i]) * 1.5;
+            V[k + 2] = Math.cos(yaw[i]) * 1.5;
+          }
+        }
+        if (P[k + 1] < -30) alive[i] = 0;
+        q.setFromAxisAngle(up, yaw[i]);
+        m4.compose(pos.set(P[k], P[k + 1], P[k + 2]), q, sc.setScalar(1.3 * shrink));
+        mesh.setMatrixAt(i, m4);
+      }
+      mesh.instanceMatrix.needsUpdate = true;
+      return t >= 19;
+    },
+    cleanup() {
+      mesh.visible = false;
+      alive.fill(0);
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
 // Runner
 // ---------------------------------------------------------------------------
 export function createEvents(ctx) {
   const { ui, audio } = ctx;
-  const EVENTS = [duckEvent(ctx), resignedEvent(ctx), moonEvent(ctx)];
+  const EVENTS = [duckEvent(ctx), resignedEvent(ctx), moonEvent(ctx), chickenEvent(ctx)];
   const active = [];
   let lastId = null;
   const btn = document.getElementById('break');
@@ -332,7 +440,8 @@ export function createEvents(ctx) {
     let pool = id ? free.filter((e) => e.id === id) : free.filter((e) => e.id !== lastId);
     if (!pool.length) pool = free;
     if (!pool.length) return buffering();
-    const def = pick(pool);
+    // The first break is always the duck (best opener); after that, truly random.
+    const def = ctx.stats.breaks === 0 && pool.some((e) => e.id === 'duck') ? pool.find((e) => e.id === 'duck') : pool[Math.floor(Math.random() * pool.length)];
     lastId = def.id;
     const ev = { def, t: 0 };
     active.push(ev);
